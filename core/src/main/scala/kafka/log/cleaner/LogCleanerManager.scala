@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package kafka.log
+package kafka.log.cleaner
 
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantLock
 
 import com.yammer.metrics.core.Gauge
 import kafka.common.LogCleaningAbortedException
+import kafka.log.Log
 import kafka.metrics.KafkaMetricsGroup
 import kafka.server.LogDirFailureChannel
 import kafka.server.checkpoints.OffsetCheckpointFile

@@ -119,6 +119,7 @@ libs += [
   joptSimple: "net.sf.jopt-simple:jopt-simple:$versions.jopt",
   junit: "junit:junit:$versions.junit",
   hamcrest: "org.hamcrest:hamcrest-all:1.3",
+  cats: "org.typelevel:cats-core_$versions.baseScala:1.5.0",
   kafkaStreams_0100: "org.apache.kafka:kafka-streams:$versions.kafka_0100",
   kafkaStreams_0101: "org.apache.kafka:kafka-streams:$versions.kafka_0101",
   kafkaStreams_0102: "org.apache.kafka:kafka-streams:$versions.kafka_0102",
