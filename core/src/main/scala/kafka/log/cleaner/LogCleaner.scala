@@ -17,29 +17,17 @@
 
 package kafka.log.cleaner
 
-import java.io.{File, IOException}
-import java.nio._
-import java.util.Date
-import java.util.concurrent.TimeUnit
+import java.io.File
 
-import com.yammer.metrics.core.Gauge
-import kafka.common._
-import kafka.log.{AbortedTxn, Log, LogSegment, TransactionIndex}
+import kafka.log.{AbortedTxn, Log, LogSegment}
 import kafka.metrics.KafkaMetricsGroup
 import kafka.server.{BrokerReconfigurable, KafkaConfig, LogDirFailureChannel}
 import kafka.utils._
-import org.apache.kafka.common.{KafkaException, TopicPartition}
+import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.config.ConfigException
-import org.apache.kafka.common.errors.{CorruptRecordException, KafkaStorageException}
-import org.apache.kafka.common.record.MemoryRecords.RecordFilter
-import org.apache.kafka.common.record.MemoryRecords.RecordFilter.BatchRetention
-import org.apache.kafka.common.record._
 import org.apache.kafka.common.utils.Time
 
-import scala.collection.JavaConverters._
-import scala.collection.mutable.ArrayBuffer
 import scala.collection.{Iterable, Set, mutable}
-import scala.util.control.ControlThrowable
 
 /**
  * The cleaner is responsible for removing obsolete records from logs which have the "compact" retention strategy.
@@ -273,17 +261,6 @@ object LogCleaner {
       fileSuffix = Log.CleanedFileSuffix, initFileSize = log.initFileSize, preallocate = log.config.preallocate)
   }
 
-  /**
-    * Given the first dirty offset and an uncleanable offset, calculates the total cleanable bytes for this log
-    * @return the biggest uncleanable offset and the total amount of cleanable bytes
-    */
-  def calculateCleanableBytes(log: Log, firstDirtyOffset: Long, uncleanableOffset: Long): (Long, Long) = {
-    val firstUncleanableSegment = log.logSegments(uncleanableOffset, log.activeSegment.baseOffset).headOption.getOrElse(log.activeSegment)
-    val firstUncleanableOffset = firstUncleanableSegment.baseOffset
-    val cleanableBytes = log.logSegments(firstDirtyOffset, math.max(firstDirtyOffset, firstUncleanableOffset)).map(_.size.toLong).sum
-
-    (firstUncleanableOffset, cleanableBytes)
-  }
 }
 
 private class AbortedTransactionMetadata(val abortedTxn: AbortedTxn) {

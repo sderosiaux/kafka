@@ -206,8 +206,7 @@ class DynamicBrokerConfig(private val kafkaConfig: KafkaConfig) extends Logging 
 
   def addReconfigurables(kafkaServer: KafkaServer): Unit = {
     addBrokerReconfigurable(new DynamicThreadPool(kafkaServer))
-    if (kafkaServer.logManager.cleaner != null)
-      addBrokerReconfigurable(kafkaServer.logManager.cleaner)
+    kafkaServer.logManager.cleaner.foreach(addBrokerReconfigurable(_))
     addReconfigurable(new DynamicLogConfig(kafkaServer.logManager, kafkaServer))
     addReconfigurable(new DynamicMetricsReporters(kafkaConfig.brokerId, kafkaServer))
     addReconfigurable(new DynamicClientQuotaCallback(kafkaConfig.brokerId, kafkaServer))

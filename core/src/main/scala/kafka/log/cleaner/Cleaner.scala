@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import java.util.Date
 
 import kafka.common.{LogCleaningAbortedException, LogSegmentOffsetOverflowException}
-import kafka.log.OffsetMap
+import kafka.log.{Log, LogSegment, OffsetMap}
 import kafka.utils.{Logging, Throttler}
 import org.apache.kafka.common.errors.CorruptRecordException
 import org.apache.kafka.common.record.MemoryRecords.RecordFilter
@@ -14,11 +14,12 @@ import org.apache.kafka.common.utils.Time
 import org.apache.kafka.common.{KafkaException, TopicPartition}
 
 import scala.collection.Iterable
+import scala.collection.JavaConverters._
 
 /**
  * This class holds the actual logic for cleaning a log
- *
- * @param id An identifier used for logging
+  *
+  * @param id An identifier used for logging
  * @param offsetMap The map used for deduplication
  * @param ioBufferSize The size of the buffers to use. Memory usage will be 2x this number as there is a read and write buffer.
  * @param maxIoBufferSize The maximum size of a message that can appear in the log
@@ -34,9 +35,7 @@ private[log] class Cleaner(val id: Int,
                            dupBufferLoadFactor: Double,
                            throttler: Throttler,
                            time: Time,
-                           checkDone: (TopicPartition) => Unit) extends Logging {
-
-  protected override def loggerName = classOf[LogCleaner].getName
+                           checkDone: TopicPartition => Unit) extends Logging {
 
   this.logIdent = "Cleaner " + id + ": "
 
@@ -46,7 +45,7 @@ private[log] class Cleaner(val id: Int,
   /* buffer used for write i/o */
   private var writeBuffer = ByteBuffer.allocate(ioBufferSize)
 
-  private val decompressionBufferSupplier = BufferSupplier.create();
+  private val decompressionBufferSupplier = BufferSupplier.create()
 
   require(offsetMap.slots * dupBufferLoadFactor > 1, "offset map is too small to fit in even a single message, so log cleaning will never make progress. You can increase log.cleaner.dedupe.buffer.size or decrease log.cleaner.threads")
 

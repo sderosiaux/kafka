@@ -60,7 +60,7 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
                                      val logs: Pool[TopicPartition, Log],
                                      val logDirFailureChannel: LogDirFailureChannel) extends Logging with KafkaMetricsGroup {
 
-  protected override def loggerName = classOf[LogCleaner].getName
+  protected override def loggerName = classOf[LogCleanerManager].getName
 
   // package-private for testing
   private[log] val offsetCheckpointFile = "cleaner-offset-checkpoint"
@@ -105,7 +105,7 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
                   partitions.map { tp =>
                     val log = logs.get(tp)
                     val (firstDirtyOffset, firstUncleanableDirtyOffset) = LogCleanerManager.cleanableOffsets(log, tp, lastClean, now)
-                    val (_, uncleanableBytes) = LogCleaner.calculateCleanableBytes(log, firstDirtyOffset, firstUncleanableDirtyOffset)
+                    val uncleanableBytes = LogToClean(log, firstDirtyOffset, firstUncleanableDirtyOffset).cleanableBytes
                     uncleanableBytes
                   }.sum
                 }
@@ -191,7 +191,7 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
         None
       } else {
         val filthiest = cleanableLogs.max
-        inProgress.put(filthiest.topicPartition, LogCleaningInProgress)
+        inProgress.put(filthiest.tp, LogCleaningInProgress)
         Some(filthiest)
       }
     }
@@ -309,14 +309,7 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
    *  Check if the cleaning for a partition is in a particular state. The caller is expected to hold lock while making the call.
    */
   private def isCleaningInState(topicPartition: TopicPartition, expectedState: LogCleaningState): Boolean = {
-    inProgress.get(topicPartition) match {
-      case None => false
-      case Some(state) =>
-        if (state == expectedState)
-          true
-        else
-          false
-    }
+    inProgress.get(topicPartition).contains(expectedState)
   }
 
   /**

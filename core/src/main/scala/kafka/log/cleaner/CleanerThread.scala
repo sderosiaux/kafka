@@ -132,10 +132,10 @@ class CleanerThread(threadId: Int,
       case e: IOException =>
         var logDirectory = cleanable.log.dir.getParent
         val msg =
-          s"Failed to clean up log for ${cleanable.topicPartition} in dir ${logDirectory} due to IOException"
+          s"Failed to clean up log for ${cleanable.tp} in dir ${logDirectory} due to IOException"
         channel.maybeAddOfflineLogDir(logDirectory, msg, e)
     } finally {
-      manager.doneCleaning(cleanable.topicPartition,
+      manager.doneCleaning(cleanable.tp,
                            cleanable.log.dir.getParentFile,
                            endOffset)
     }
